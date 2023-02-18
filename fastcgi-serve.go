@@ -1,7 +1,7 @@
 package main
 
 import "bufio"
-import "github.com/beberlei/hhvm-serve/fcgiclient"
+import "github.com/r0123r/fastcgi-serve/fcgiclient"
 import "errors"
 import "net/http"
 import "fmt"
