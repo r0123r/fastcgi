@@ -59,8 +59,9 @@ const (
 )
 
 const (
-	maxWrite = 6553500 // maximum record body
+	maxWrite = 65535 // maximum record body
 	maxPad   = 255
+	maxPost  = 6553500
 )
 
 type header struct {
@@ -97,7 +98,7 @@ func (rec *record) read(r io.Reader) (err error) {
 		return errors.New("fcgi: invalid header version")
 	}
 	n := int(rec.h.ContentLength) + int(rec.h.PaddingLength)
-	if n > maxWrite + maxPad {
+	if n > maxPost+maxPad {
 		return errors.New("fcgi: response is too long")
 	}
 	rec.buf = make([]byte, n)
@@ -130,8 +131,8 @@ func New(h string, args ...interface{}) (fcgi *FCGIClient, err error) {
 		addr := h + ":" + strconv.FormatInt(int64(args[0].(int)), 10)
 		conn, err = net.Dial("tcp", addr)
 	case string:
-		addr := h + ":" + args[0].(string)
-		conn, err = net.Dial("unix", addr)
+		//addr := args[0].(string)
+		conn, err = net.Dial("unix", h)
 	default:
 		err = errors.New("fcgi: we only accept int (port) or string (socket) params.")
 	}
@@ -183,7 +184,7 @@ func (this *FCGIClient) writePairs(recType uint8, reqId uint16, pairs map[string
 		n := encodeSize(b, uint32(kLen))
 		n += encodeSize(b[n:], uint32(vLen))
 
-		writterBufSize += (n + kLen + vLen);
+		writterBufSize += (n + kLen + vLen)
 	}
 
 	w := newWriter(this, recType, reqId, writterBufSize)
@@ -302,10 +303,13 @@ func (this *FCGIClient) Request(env map[string]string, reqStr string) (retout []
 		return
 	}
 	if len(reqStr) > 0 {
-		err = this.writeRecord(FCGI_STDIN, reqId, []byte(reqStr))
+		w := newWriter(this, FCGI_STDIN, reqId, len(reqStr))
+		//err = this.writeRecord(FCGI_STDIN, reqId, []byte(reqStr))
+		_, err = w.WriteString(reqStr)
 		if err != nil {
 			return
 		}
+		w.Close()
 	}
 
 	rec := &record{}
