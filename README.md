@@ -1,5 +1,5 @@
 # FastCGI-Serve - A webserver for FastCGI
-cloning https://github.com/beberlei/fastcgi-serve
+cloning from https://github.com/beberlei/fastcgi-serve
 
 ## Usage
 
